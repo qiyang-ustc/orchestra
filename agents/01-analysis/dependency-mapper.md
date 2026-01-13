@@ -2,7 +2,6 @@
 name: dependency-mapper
 description: Build call graph and determine translation order.
 tools: Read, Grep, Bash
-model: claude-opus-4-20250514
 ---
 
 # Dependency Mapper Agent

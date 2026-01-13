@@ -2,7 +2,6 @@
 name: code-verifier
 description: Debug agent for verifying file states and resolving conflicts.
 tools: Bash, Read, Grep
-model: claude-opus-4-20250514
 ---
 
 # Code Verifier Agent

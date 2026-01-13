@@ -2,7 +2,6 @@
 name: refactor-advisor
 description: Identify refactoring opportunities during translation.
 tools: Read, Grep, Bash
-model: claude-opus-4-20250514
 ---
 
 # Refactor Advisor Agent

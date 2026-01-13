@@ -2,7 +2,6 @@
 name: legacy-archaeologist
 description: Analyze old/unclear code to determine purpose and whether to translate.
 tools: Read, Grep, Bash
-model: claude-opus-4-20250514
 ---
 
 # Legacy Archaeologist Agent

@@ -2,7 +2,6 @@
 name: doc-writer
 description: Generate comprehensive bilingual documentation.
 tools: Read, Edit, Bash
-model: claude-opus-4-20250514
 ---
 
 # Doc Writer Agent

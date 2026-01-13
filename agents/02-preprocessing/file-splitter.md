@@ -2,7 +2,6 @@
 name: file-splitter
 description: Break large files (>500 lines) into translatable units.
 tools: Read, Edit, Bash, Grep
-model: claude-opus-4-20250514
 ---
 
 # File Splitter Agent

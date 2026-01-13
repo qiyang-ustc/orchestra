@@ -2,7 +2,6 @@
 name: human-review-gate
 description: Manage async human decision queue. NEVER block - skip and continue.
 tools: Read, Edit, Bash
-model: claude-opus-4-20250514
 ---
 
 # Human Review Gate Agent

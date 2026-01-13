@@ -2,7 +2,6 @@
 name: equivalence-prover
 description: Prove target implementation equals source. Not just testing - mathematical verification.
 tools: Read, Edit, Bash
-model: claude-opus-4-20250514
 ---
 
 # Equivalence Prover Agent

@@ -2,7 +2,6 @@
 name: codebase-scanner
 description: Build initial index of source codebase structure.
 tools: Bash, Read, Glob
-model: claude-opus-4-20250514
 ---
 
 # Codebase Scanner Agent

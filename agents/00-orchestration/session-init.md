@@ -2,7 +2,6 @@
 name: session-init
 description: Initialize session, verify environment. Run FIRST at every session.
 tools: Bash, Read
-model: claude-opus-4-20250514
 ---
 
 # Session Init Agent

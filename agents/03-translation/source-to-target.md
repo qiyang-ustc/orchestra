@@ -2,7 +2,6 @@
 name: source-to-target
 description: Main translation agent. Converts source language to target language.
 tools: Read, Edit, Bash
-model: claude-opus-4-20250514
 ---
 
 # Source to Target Translation Agent

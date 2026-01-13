@@ -2,7 +2,6 @@
 name: progress-tracker
 description: Track N-way equivalence status. Run at session start and after completions.
 tools: Read, Edit, Bash, Glob
-model: claude-opus-4-20250514
 ---
 
 # Progress Tracker Agent
