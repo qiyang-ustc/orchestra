@@ -2,269 +2,228 @@
 
 ## Problem
 
-In multi-agent translation pipelines, errors propagate silently when agents trust each other's outputs. If Doc-Writer makes a mistake, Translator copies it, and Verifier validates against the wrong spec.
+In multi-agent translation pipelines, errors propagate silently when agents trust each other's outputs.
 
-## Solution
+## The Only Truth: Oracle
 
-**No agent trusts another. Every output is a hypothesis to be challenged.**
+**Source implementation behavior is the ONLY golden standard.**
 
 ```
-            Doc (hypothesis)
+∀x: target(x) ≈ source(x)
+```
+
+- If source has a "bug", we reproduce it
+- If source has a trick we don't understand, we match it
+- Doc helps us understand, but source behavior is truth
+
+## The Triangle
+
+```
+        Doc (hypothesis/understanding)
              ↗️      ↖️
-        challenge  challenge
+        helps      informs
            ↙️          ↘️
-    Source ←───compare───→ Target
-       │                      │
-       └────── oracle ────────┘
+    Source ←───oracle───→ Target
 ```
 
-## Core Principle
+**Key insight: Only the bottom edge (source→target) determines correctness.**
 
-**Truth emerges from disagreement, not agreement.**
+Doc is for understanding, not verification. If doc conflicts with source → source wins.
 
-Three independent verifications must align:
-1. Doc describes Source correctly
-2. Target implements Doc correctly
-3. Target matches Source (oracle)
-
-If any edge fails → the triangle is broken → downgrade to L0.
-
-## Agent Responsibilities
+## Agent Roles
 
 ### Doc-Writer (Hypothesis Generator)
 
 ```
 INPUT:  Source code
-OUTPUT: Documentation (hypothesis)
+OUTPUT: Documentation (hypothesis about source behavior)
 STANCE: "I believe I understand the source"
 
 MUST:
 - Read source code directly
-- Generate testable claims
-- Mark output as L0 (draft)
+- Generate testable claims about source behavior
+- Mark output as L0 (draft hypothesis)
+- Mark uncertainties explicitly
 
 MUST NOT:
-- Claim certainty
-- Skip ambiguous cases
+- Claim certainty about source behavior
+- Assume doc defines correctness
 ```
 
 ### Translator (Skeptical Implementer)
 
 ```
-INPUT:  Source code + Doc (hypothesis)
-OUTPUT: Target code + challenges
-STANCE: "I will verify doc against source while translating"
+INPUT:  Source code + Doc (as understanding aid)
+OUTPUT: Target code
+STANCE: "Doc helps me understand, but source is truth"
 
 MUST:
 - Read source code independently
-- Compare doc claims with source behavior
-- Raise challenge if doc != source
-- Mark output as L0 (draft)
+- Use doc to understand intent
+- Follow SOURCE when doc conflicts
+- Challenge doc if mismatch found
 
 MUST NOT:
-- Blindly follow doc
-- Assume doc is correct
-- Ignore inconsistencies
+- Blindly follow doc over source
+- Ignore source behavior
 ```
 
-### Verifier (Adversarial Auditor)
+### Verifier (Oracle Tester)
 
 ```
-INPUT:  Source + Target + Doc
-OUTPUT: Verification report + challenges
-STANCE: "I trust nothing. I will try to break everything."
+INPUT:  Source + Target
+OUTPUT: Verification report
+STANCE: "Only oracle comparison matters"
 
 MUST:
 - Verify Target matches Source (oracle test)
-- Verify Doc describes Source correctly
-- Verify Doc describes Target correctly
-- Actively try to find counterexamples
+- Generate diverse ground truth from source
+- Run adversarial attacks against oracle comparison
 - Mark verified items as L2/L3
 
 MUST NOT:
-- Assume any input is correct
+- Use doc as verification standard
 - Skip edge cases
 - Accept without adversarial testing
 ```
 
-## The Confrontation Protocol
+## The Workflow
 
-### Phase 1: Hypothesis Generation
+### Phase 1: Understanding (Doc)
 
 ```
 Doc-Writer reads Source
-  → Generates Doc (L0)
+  → Generates Doc (hypothesis about behavior)
   → Records uncertainty: "Source line 45 unclear, assumed X"
+  → This is for UNDERSTANDING, not for defining correctness
 ```
 
-### Phase 2: Skeptical Translation
+### Phase 2: Translation (Following Source)
 
 ```
-Translator reads Source + Doc
-  → Compares Doc claims with Source
-  → IF match: proceeds with translation
-  → IF mismatch:
-      CHALLENGE {
-        doc_claim: "Function returns sorted array"
-        source_behavior: "Function returns array in original order"
-        evidence: "source.jl:45 - no sort call"
-      }
-      → Doc downgrades to L0
-      → Translator makes own interpretation
+Translator reads Source + uses Doc for context
+  → IF doc helps understand source: great
+  → IF doc conflicts with source:
+      CHALLENGE the doc
+      → Follow SOURCE behavior anyway
+      → Translation guided by source, not doc
 ```
 
-### Phase 3: Adversarial Verification
+### Phase 3: Oracle Verification
 
 ```
-Verifier receives Source + Target + Doc (all L0/L1)
-  → Test 1: Oracle comparison
-      FOR random inputs x:
-        assert target(x) ≈ source(x)
-  → Test 2: Doc-Source consistency
-      FOR each doc claim:
-        verify source satisfies claim
-  → Test 3: Doc-Target consistency
-      FOR each doc claim:
-        verify target satisfies claim
-  → Test 4: Adversarial attack
-      TRY to find x where target(x) != source(x)
-      TRY to find doc claim that code violates
+Verifier receives Source + Target
+  → Generate ground truth from source
+      FOR diverse inputs x:
+        oracle_output = source(x)
+        save to ground_truth file
+  → Oracle test
+      FOR each (x, expected) in ground_truth:
+        actual = target(x)
+        assert actual ≈ expected
+  → Adversarial attack
+      TRY to find x where target(x) ≠ source(x)
+```
+
+### Phase 4: Update Understanding (If needed)
+
+```
+IF oracle passes but doc test fails:
+  → Our understanding was wrong
+  → Update doc to match actual source behavior
+  → Doc test should now pass
+  → Translation is still correct (oracle passed)
+
+IF oracle fails:
+  → Translation is wrong
+  → Fix translation to match source
+```
+
+## Doc's Role (Secondary)
+
+Doc tests verify **our understanding**, not correctness:
+
+```python
+# Doc-based test: tests OUR UNDERSTANDING
+def test_our_understanding_orthonormal():
+    Q, R = qrpos(A)
+    # If this fails, check source - maybe our understanding is wrong
+    assert torch.allclose(Q.T @ Q, torch.eye(n))
+
+# Oracle test: THE ONLY TRUTH
+def test_oracle():
+    expected = load_source_output("qrpos_case_1")
+    actual = qrpos(input)
+    assert torch.allclose(actual, expected)  # This determines correctness
+```
+
+**Decision Tree:**
+```
+Doc test fails + Oracle passes → Update doc (understanding was wrong)
+Doc test fails + Oracle fails  → Fix translation
+Doc test passes + Oracle passes → All good
+Doc test passes + Oracle fails → Fix translation (doc test is irrelevant)
 ```
 
 ## Challenge Workflow
 
+Challenges are about **doc accuracy**, not correctness:
+
 ```
-Agent finds inconsistency
+Agent finds doc doesn't match source behavior
     │
     ▼
-┌─────────────────────────────────────┐
-│ CHALLENGE RECORD                    │
-│ - who: which agent                  │
-│ - what: inconsistency description   │
-│ - where: file:line evidence         │
-│ - severity: critical/major/minor    │
-└─────────────────────────────────────┘
+CHALLENGE RECORD
+  - what: "Doc says X but source does Y"
+  - where: file:line evidence
     │
     ▼
-Affected item downgrades to L0
-    │
-    ▼
-Challenge queued for resolution
-    │
-    ├──[resolved by agent]──→ Item re-verified
-    │
-    └──[needs human]──→ human_review_queue.md
-```
-
-## Example Confrontation
-
-### Scenario
-
-Doc-Writer wrote:
-```markdown
-## contract_tensors
-Contracts two tensors along specified dimensions.
-**dims**: 0-indexed list of dimensions
-```
-
-Translator found:
-```julia
-# Source: contract.jl:52
-result = contract(a, b, dims .+ 1)  # Julia adds 1 to dims!
-```
-
-### Challenge Raised
-
-```yaml
-challenge:
-  id: CHG-042
-  date: 2024-01-15
-  raised_by: source-to-target
-  against: docs/contract_tensors.md
-
-  description: |
-    Doc claims dims is 0-indexed, but source code adds 1 to dims
-    before passing to internal contract function. This suggests
-    the source actually expects 0-indexed input (Python-style),
-    but the doc description is misleading about what "0-indexed" means
-    in this context.
-
-  evidence:
-    - file: contract.jl
-      line: 52
-      content: "dims .+ 1  # converting from 0-indexed to Julia 1-indexed"
-    - file: docs/contract_tensors.md
-      section: Parameters
-      content: "dims: 0-indexed list"
-
-  proposed_resolution: |
-    Doc is technically correct but confusing. The source accepts
-    0-indexed dims (Python convention) and internally converts to
-    1-indexed for Julia. Doc should clarify this conversion.
-
-  severity: major
-```
-
-### Resolution
-
-```yaml
-resolution:
-  decision: clarify_doc
-  resolved_by: doc-writer
-  date: 2024-01-16
-
-  action: |
-    Updated doc to:
-    "dims: 0-indexed dimension list (Python convention).
-     Note: Source internally converts to 1-indexed for Julia operations."
-
-  verification:
-    - doc re-checked by translator: pass
-    - oracle tests: pass
-    - doc-source consistency: pass
+Update doc to match source behavior
 ```
 
 ## Benefits
 
-1. **Error Detection**: Mistakes caught at intersection points
-2. **Forced Understanding**: No agent can coast on others' work
-3. **Audit Trail**: Every challenge is documented
-4. **Quality Signal**: L3/L4 means survived multiple challenges
-5. **No Silent Failures**: Disagreement is surfaced, not hidden
+1. **Clear truth** — Oracle is the only standard
+2. **No confusion** — Doc is understanding, not spec
+3. **Error detection** — Misunderstanding caught and fixed
+4. **Quality signal** — L2/L3 means oracle verified
 
 ## Anti-Patterns
 
-### ❌ Rubber Stamp
+### ❌ Doc as Truth
 
 ```
-Translator: "Doc says X, I'll just implement X"
-# WRONG: No verification against source
+"Doc says X, so translation must do X"
+# WRONG: Source says Y, translation must do Y
 ```
 
-### ❌ Silent Override
+### ❌ Mathematical Idealism
 
 ```
-Translator: "Doc says X but source does Y. I'll implement Y and not mention it."
-# WRONG: Must raise challenge
+"SVD should satisfy A = U @ S @ V.T, let's test that"
+# WRONG: Source might have tricks we don't understand
+# Test against source output, not mathematical properties
 ```
 
-### ❌ Trust Cascade
+### ❌ Skip Oracle
 
 ```
-Verifier: "Translator already checked against doc, I'll just run tests"
-# WRONG: Must independently verify all three edges
+"Doc tests pass, so translation is correct"
+# WRONG: Only oracle tests determine correctness
 ```
 
-## Integration with Verification Levels
+## Verification Levels
 
-| Level | Triangular Status |
-|-------|-------------------|
-| L0 | Single point (no verification) |
-| L1 | One edge verified (e.g., doc-source) |
-| L2 | Two edges verified (e.g., doc-source, source-target) |
-| L3 | All edges verified + adversarial |
-| L4 | Full triangle + human confirmation |
+| Level | Requirement |
+|-------|-------------|
+| L0 | Just written |
+| L1 | Another agent reviewed |
+| L2 | Oracle tests pass |
+| L3 | L2 + adversarial attacks fail |
+| L4 | L3 + human review |
+
+**Only oracle tests (source vs target) determine L2/L3.**
 
 ## Summary
 
-> **"In triangular confrontation, consensus is earned through surviving disagreement, not assumed through blind trust."**
+> **"Source behavior is the only truth. Doc helps us understand it. Oracle tests verify we matched it."**
