@@ -108,14 +108,63 @@ challenges:
       date: null
 ```
 
+## Two Test Types Required
+
+L2+ requires BOTH test types to pass:
+
+### Doc-Based Tests
+
+Tests that verify **documentation claims**:
+
+```python
+# From doc: "Returns orthonormal Q"
+def test_orthonormality():
+    Q, R = qrpos(A)
+    assert torch.allclose(Q.T @ Q, torch.eye(n))
+
+# From doc: "R has positive diagonal"
+def test_positive_diagonal():
+    Q, R = qrpos(A)
+    assert (torch.diag(R) > 0).all()
+```
+
+### Oracle Tests
+
+Tests that compare **target vs source**:
+
+```python
+def test_oracle():
+    expected = load_julia_output("qrpos_case_1")
+    actual = qrpos(A)
+    assert torch.allclose(actual, expected, rtol=1e-10)
+```
+
+### Test File Convention
+
+```
+tests/
+├── test_{function}_doc.py      # Doc-based tests
+├── test_{function}_oracle.py   # Oracle tests
+└── ground_truth/
+    └── {function}.npz          # Oracle data from source
+```
+
+---
+
 ## Adversarial Testing Protocol
 
-The attacker agent (usually `equivalence-prover`) attempts to:
+For L3, attacker tries to break BOTH test types:
 
-1. **Find breaking inputs**: Inputs where `source(x) != target(x)`
-2. **Find undocumented behavior**: Code behavior not described in docs
-3. **Find doc-code mismatch**: Doc claims not satisfied by code
-4. **Find edge cases**: Boundary conditions, NaN, Inf, empty inputs
+### Attack Doc Claims
+Find inputs where doc claims might fail:
+- "positive diagonal" → try ill-conditioned matrix
+- "orthonormal" → try near-singular input
+
+### Attack Oracle
+Find inputs where target ≠ source:
+- Boundary values (0, inf, nan, epsilon)
+- Ill-conditioned cases
+- Type edge cases (complex, small dims)
 
 ### Adversarial Report Format
 
