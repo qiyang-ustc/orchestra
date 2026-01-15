@@ -18,25 +18,25 @@ Orchestra solves this through:
 
 ## Quick Start
 
-### 1. Setup project structure
+### 1. Pull source code (somewhere)
 
 ```bash
-# Create project directory
-mkdir tenet-py && cd tenet-py
-git init
-
-# Add source as submodule (read-only)
-git submodule add git@github.com:someone/TeneT.jl.git src
-
-# Copy orchestra template
-cp /path/to/orchestra/templates/CLAUDE.md .
+cd ~/works
+git clone git@github.com:someone/TeneT.jl.git
 ```
 
-### 2. Create orchestra.yaml
+### 2. Pull Orchestra as your project base
+
+```bash
+git clone git@github.com:qiyang-ustc/orchestra.git tenet-py
+cd tenet-py
+```
+
+### 3. Edit orchestra.yaml
 
 ```yaml
-src: ./src                  # submodule (read-only)
-dst: ./tenet_py             # translation output (read-write)
+src: ../TeneT.jl            # Path to source (read-only)
+dst: ./tenet_py             # Translation output (read-write)
 framework: julia -> pytorch
 
 notes: |
@@ -48,41 +48,35 @@ notes: |
   - Start with core linalg, then MPS, then VUMPS
 ```
 
-### 3. Link to remote and start fresh
+### 4. Push to your dst repo
 
 ```bash
-# Point to your target repo (overwrites old content)
-git remote add origin git@github.com:you/tenet-py.git
-
-# Initial commit
-git add -A
-git commit -m "init: orchestra translation project"
-
-# Force push to start fresh
-git push --force origin main
+git remote set-url origin git@github.com:you/tenet-py.git
+git push
 ```
 
-### 4. Start translation
+### 5. Start translation
 
 ```bash
 claude
 > "Read orchestra.yaml and start translation"
 ```
 
-### Project structure
+### Directory structure
 
 ```
-tenet-py/                  # Your repo (the product)
-├── orchestra.yaml         # Declaration
-├── CLAUDE.md              # Framework rules
-├── src/                   # Submodule: source code (read-only)
-├── tenet_py/              # dst: translated package
-├── tests/
-├── docs/
-└── notes/                 # Knowledge base, decisions
+~/works/
+├── TeneT.jl/              # Source repo (read-only)
+└── tenet-py/              # Your project (cloned from orchestra)
+    ├── orchestra.yaml     # src: ../TeneT.jl, dst: ./tenet_py
+    ├── CLAUDE.md
+    ├── tenet_py/          # Translation output
+    ├── tests/
+    ├── docs/
+    └── notes/             # Knowledge base
 ```
 
-Users install with `pip install .` — src submodule is dev dependency only.
+Orchestra is the scaffolding. Clone it, edit yaml, push to your repo.
 
 ## Directory Structure
 
