@@ -18,12 +18,25 @@ Orchestra solves this through:
 
 ## Quick Start
 
-1. In your project, create two files:
+### 1. Setup project structure
 
-**`orchestra.yaml`** — Your declaration:
+```bash
+# Create project directory
+mkdir tenet-py && cd tenet-py
+git init
+
+# Add source as submodule (read-only)
+git submodule add git@github.com:someone/TeneT.jl.git src
+
+# Copy orchestra template
+cp /path/to/orchestra/templates/CLAUDE.md .
+```
+
+### 2. Create orchestra.yaml
+
 ```yaml
-src: ../TeneT.jl            # Source (read-only)
-dst: ./tenet_py             # Target (local, read-write)
+src: ./src                  # submodule (read-only)
+dst: ./tenet_py             # translation output (read-write)
 framework: julia -> pytorch
 
 notes: |
@@ -35,22 +48,41 @@ notes: |
   - Start with core linalg, then MPS, then VUMPS
 ```
 
-**`CLAUDE.md`** — Copy from [`templates/CLAUDE.md`](templates/CLAUDE.md) or just:
-```markdown
-# Orchestra Translation Project
-Read `orchestra.yaml` for project declaration.
-Follow orchestra framework rules.
-```
+### 3. Link to remote and start fresh
 
-2. Start Claude Code:
 ```bash
-cd your-project
-claude
+# Point to your target repo (overwrites old content)
+git remote add origin git@github.com:you/tenet-py.git
+
+# Initial commit
+git add -A
+git commit -m "init: orchestra translation project"
+
+# Force push to start fresh
+git push --force origin main
 ```
 
-3. Say: "Start translation" or "Read orchestra.yaml and begin"
+### 4. Start translation
 
-That's it. Your domain knowledge goes in `notes`, Claude follows the framework.
+```bash
+claude
+> "Read orchestra.yaml and start translation"
+```
+
+### Project structure
+
+```
+tenet-py/                  # Your repo (the product)
+├── orchestra.yaml         # Declaration
+├── CLAUDE.md              # Framework rules
+├── src/                   # Submodule: source code (read-only)
+├── tenet_py/              # dst: translated package
+├── tests/
+├── docs/
+└── notes/                 # Knowledge base, decisions
+```
+
+Users install with `pip install .` — src submodule is dev dependency only.
 
 ## Directory Structure
 
