@@ -6,7 +6,8 @@
       "Bash(git commit:*)",
       "Bash(wc:*)",
       "Bash(git push)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ls:*)"
     ]
   }
 }
