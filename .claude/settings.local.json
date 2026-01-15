@@ -4,7 +4,9 @@
       "mcp__serena__list_dir",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git push)",
+      "Bash(git push:*)"
     ]
   }
 }

@@ -18,24 +18,39 @@ Orchestra solves this through:
 
 ## Quick Start
 
-1. Copy the templates to your project:
-```bash
-cp -r orchestra/templates/* /path/to/your/project/
-cp -r orchestra/agents/* /path/to/your/project/.claude/agents/
+1. Create `orchestra.yaml` in your project root:
+
+```yaml
+# orchestra.yaml — The Declaration
+project: my-translation
+description: "Translate X to Y"
+
+source:
+  path: ../source-repo
+  language: julia
+
+target:
+  path: ./target-pkg
+  language: python
+
+equivalence:
+  default_type: E4  # numerical
+
+verification:
+  core_math: L3     # adversarial required
+  algorithms: L2    # oracle sufficient
+
+domain:
+  constraints:
+    - name: energy_bound
+      check: "result.energy < 0"
 ```
 
-2. Customize `CLAUDE.md` for your specific translation:
-   - Set source and target paths
-   - Define equivalence dimensions
-   - Configure language-specific rules
+2. Start Claude Code and say: `/orchestra` or "start orchestra"
 
-3. Start Claude Code:
-```bash
-cd /path/to/your/project
-claude
-```
+That's it. Orchestra reads your declaration and begins.
 
-4. Say: "Follow CLAUDE.md protocol"
+See [`orchestra.yaml.example`](orchestra.yaml.example) for full specification.
 
 ## Directory Structure
 

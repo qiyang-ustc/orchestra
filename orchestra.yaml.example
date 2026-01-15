@@ -1,0 +1,121 @@
+# ============================================================================
+# ORCHESTRA DECLARATION
+# ============================================================================
+# This file declares the translation project.
+# It is the single source of truth for what this translation aims to achieve.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Identity
+# ----------------------------------------------------------------------------
+project: tenet-py
+description: "PyTorch implementation of TeneT.jl tensor network library"
+
+# ----------------------------------------------------------------------------
+# Source & Target
+# ----------------------------------------------------------------------------
+source:
+  path: ../TeneT.jl
+  language: julia
+  entry_points:
+    - src/TeneT.jl
+
+target:
+  path: ./tenet_py
+  language: python
+  package_name: tenet
+
+# ----------------------------------------------------------------------------
+# Equivalence Standard
+# ----------------------------------------------------------------------------
+equivalence:
+  dimensions: 6  # Code, Test, Doc × Source, Target
+
+  # What level of "equal" do we need?
+  default_type: E4  # numerical (within tolerance)
+
+  # Override for specific modules
+  overrides:
+    core/*: E4      # strict numerical
+    algorithms/*: E3  # semantic (convergence path may differ)
+    utils/random*: E1  # statistical only
+
+# ----------------------------------------------------------------------------
+# Verification Requirements
+# ----------------------------------------------------------------------------
+verification:
+  # Minimum levels by conceptual layer
+  core_math: L3      # adversarial required
+  building_blocks: L3
+  algorithms: L2     # oracle sufficient initially
+  api: L2
+  edge: L2
+
+  # Tolerances
+  rtol: 1.0e-10
+  atol: 1.0e-12
+
+# ----------------------------------------------------------------------------
+# Domain Constraints (Physical Sanity)
+# ----------------------------------------------------------------------------
+domain:
+  name: "Tensor Networks / Condensed Matter Physics"
+
+  constraints:
+    - name: heisenberg_energy
+      description: "Ground state energy must be negative for AFM Heisenberg"
+      check: "result.energy < 0"
+      applies_to: ["*heisenberg*", "*antiferromagnetic*"]
+
+    - name: normalization
+      description: "MPS must satisfy canonical form"
+      check: "assert_canonical_form(result.mps)"
+      applies_to: ["*mps*", "*canonical*"]
+
+    - name: entropy_bound
+      description: "Entanglement entropy S ≤ log(χ)"
+      check: "result.entropy <= np.log(result.bond_dim) + 1e-10"
+      applies_to: ["*entropy*", "*entanglement*"]
+
+# ----------------------------------------------------------------------------
+# Language-Specific Rules
+# ----------------------------------------------------------------------------
+translation_rules:
+  indexing:
+    source: 1-based
+    target: 0-based
+    strategy: "convert at API boundary"
+
+  memory_layout:
+    source: column-major
+    target: row-major
+    strategy: "transpose where necessary"
+
+  complex_gradients:
+    source: "conjugate convention"
+    target: "Wirtinger (PyTorch default)"
+    strategy: "conjugate when comparing gradients"
+
+# ----------------------------------------------------------------------------
+# Human Expertise Required
+# ----------------------------------------------------------------------------
+expertise:
+  required:
+    - "Tensor network theory"
+    - "Numerical linear algebra"
+    - "Julia ecosystem"
+    - "PyTorch autodiff"
+
+  contacts:
+    - name: "Project Lead"
+      role: "Domain expert, final decisions"
+
+# ----------------------------------------------------------------------------
+# Project Metadata
+# ----------------------------------------------------------------------------
+meta:
+  created: 2024-01-15
+  orchestra_version: "1.0"
+
+  # Where to find orchestra rules (if not local)
+  orchestra_source: "~/.orchestra"  # or "https://github.com/user/orchestra"
