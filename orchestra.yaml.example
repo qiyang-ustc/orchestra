@@ -2,11 +2,11 @@
 # ORCHESTRA DECLARATION (v0.1 - MVP)
 # ============================================================================
 
-# Source code (read-only)
+# Source code (read-only) - Original Julia library
 src: ../TeneT.jl
 
 # Target location (local, read-write)
-dst: ./tenet_py
+dst: ./pytenet
 
 # Framework/language
 framework: julia -> pytorch
@@ -14,9 +14,6 @@ framework: julia -> pytorch
 # ----------------------------------------------------------------------------
 # Human Notes
 # ----------------------------------------------------------------------------
-# This is where you put core knowledge, context, and ideas.
-# The LLM will read this to understand your intent.
-
 notes: |
   This is a tensor network library for variational quantum simulations.
 

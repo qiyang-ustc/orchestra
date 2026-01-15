@@ -18,22 +18,35 @@ Orchestra solves this through:
 
 ## Quick Start
 
-### Option A: One-liner with script
+### Option A: Use example script (for TeneT.jl → PyTorch)
 
 ```bash
-# 1. Have src somewhere
+cd ~/works
+
+# 1. Clone source
 git clone git@github.com:someone/TeneT.jl.git
 
 # 2. Clone orchestra
 git clone git@github.com:qiyang-ustc/orchestra.git
 
-# 3. Run init script
-./orchestra/scripts/init-project.sh pytenet ./TeneT.jl git@github.com:you/pytenet.git
+# 3. Run example init script
+./orchestra/scripts/example-init.sh git@github.com:you/pytenet.git
 
 # 4. Start
 cd pytenet
 git push -u origin main
 claude
+```
+
+This creates:
+```
+~/works/
+├── TeneT.jl/        # src (read-only)
+├── orchestra/       # framework
+└── pytenet/         # your project
+    ├── orchestra.yaml   # src: ../TeneT.jl
+    ├── CLAUDE.md
+    └── pytenet/         # dst package
 ```
 
 ### Option B: Manual setup
