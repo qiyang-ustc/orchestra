@@ -18,39 +18,29 @@ Orchestra solves this through:
 
 ## Quick Start
 
-1. Create `orchestra.yaml` in your project root:
+1. Create `orchestra.yaml` in your project:
 
 ```yaml
-# orchestra.yaml — The Declaration
-project: my-translation
-description: "Translate X to Y"
+src: ../TeneT.jl            # Source (read-only)
+dst: ./tenet_py             # Target (local, read-write)
+framework: julia -> pytorch
 
-source:
-  path: ../source-repo
-  language: julia
+notes: |
+  Tensor network library for quantum simulations.
 
-target:
-  path: ./target-pkg
-  language: python
+  Key things:
+  - Julia 1-indexed → Python 0-indexed
+  - Ground state energy should be negative
+  - Start with core linalg, then MPS, then VUMPS
 
-equivalence:
-  default_type: E4  # numerical
-
-verification:
-  core_math: L3     # adversarial required
-  algorithms: L2    # oracle sufficient
-
-domain:
-  constraints:
-    - name: energy_bound
-      check: "result.energy < 0"
+  Watch out for:
+  - Phase ambiguity in eigenvectors
+  - Sign convention in QR
 ```
 
-2. Start Claude Code and say: `/orchestra` or "start orchestra"
+2. Say: `/orchestra` or "start orchestra"
 
-That's it. Orchestra reads your declaration and begins.
-
-See [`orchestra.yaml.example`](orchestra.yaml.example) for full specification.
+That's it. Put your domain knowledge in `notes`, LLM handles the rest.
 
 ## Directory Structure
 

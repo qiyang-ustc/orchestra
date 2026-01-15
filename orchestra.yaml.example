@@ -1,121 +1,37 @@
 # ============================================================================
-# ORCHESTRA DECLARATION
-# ============================================================================
-# This file declares the translation project.
-# It is the single source of truth for what this translation aims to achieve.
+# ORCHESTRA DECLARATION (v0.1 - MVP)
 # ============================================================================
 
-# ----------------------------------------------------------------------------
-# Identity
-# ----------------------------------------------------------------------------
-project: tenet-py
-description: "PyTorch implementation of TeneT.jl tensor network library"
+# Source code (read-only)
+src: ../TeneT.jl
+
+# Target location (local, read-write)
+dst: ./tenet_py
+
+# Framework/language
+framework: julia -> pytorch
 
 # ----------------------------------------------------------------------------
-# Source & Target
+# Human Notes
 # ----------------------------------------------------------------------------
-source:
-  path: ../TeneT.jl
-  language: julia
-  entry_points:
-    - src/TeneT.jl
+# This is where you put core knowledge, context, and ideas.
+# The LLM will read this to understand your intent.
 
-target:
-  path: ./tenet_py
-  language: python
-  package_name: tenet
+notes: |
+  This is a tensor network library for variational quantum simulations.
 
-# ----------------------------------------------------------------------------
-# Equivalence Standard
-# ----------------------------------------------------------------------------
-equivalence:
-  dimensions: 6  # Code, Test, Doc × Source, Target
+  Key things to know:
+  - Julia uses 1-indexed arrays, Python uses 0-indexed
+  - The core algorithm is VUMPS (variational uniform MPS)
+  - Ground state energy for Heisenberg model should be negative (~-0.44/site)
+  - Complex gradients: Julia uses conjugate convention, PyTorch uses Wirtinger
 
-  # What level of "equal" do we need?
-  default_type: E4  # numerical (within tolerance)
+  Priority:
+  - Start with core linear algebra (svd, qr, eigensolve)
+  - Then MPS data structures
+  - Then VUMPS algorithm
 
-  # Override for specific modules
-  overrides:
-    core/*: E4      # strict numerical
-    algorithms/*: E3  # semantic (convergence path may differ)
-    utils/random*: E1  # statistical only
-
-# ----------------------------------------------------------------------------
-# Verification Requirements
-# ----------------------------------------------------------------------------
-verification:
-  # Minimum levels by conceptual layer
-  core_math: L3      # adversarial required
-  building_blocks: L3
-  algorithms: L2     # oracle sufficient initially
-  api: L2
-  edge: L2
-
-  # Tolerances
-  rtol: 1.0e-10
-  atol: 1.0e-12
-
-# ----------------------------------------------------------------------------
-# Domain Constraints (Physical Sanity)
-# ----------------------------------------------------------------------------
-domain:
-  name: "Tensor Networks / Condensed Matter Physics"
-
-  constraints:
-    - name: heisenberg_energy
-      description: "Ground state energy must be negative for AFM Heisenberg"
-      check: "result.energy < 0"
-      applies_to: ["*heisenberg*", "*antiferromagnetic*"]
-
-    - name: normalization
-      description: "MPS must satisfy canonical form"
-      check: "assert_canonical_form(result.mps)"
-      applies_to: ["*mps*", "*canonical*"]
-
-    - name: entropy_bound
-      description: "Entanglement entropy S ≤ log(χ)"
-      check: "result.entropy <= np.log(result.bond_dim) + 1e-10"
-      applies_to: ["*entropy*", "*entanglement*"]
-
-# ----------------------------------------------------------------------------
-# Language-Specific Rules
-# ----------------------------------------------------------------------------
-translation_rules:
-  indexing:
-    source: 1-based
-    target: 0-based
-    strategy: "convert at API boundary"
-
-  memory_layout:
-    source: column-major
-    target: row-major
-    strategy: "transpose where necessary"
-
-  complex_gradients:
-    source: "conjugate convention"
-    target: "Wirtinger (PyTorch default)"
-    strategy: "conjugate when comparing gradients"
-
-# ----------------------------------------------------------------------------
-# Human Expertise Required
-# ----------------------------------------------------------------------------
-expertise:
-  required:
-    - "Tensor network theory"
-    - "Numerical linear algebra"
-    - "Julia ecosystem"
-    - "PyTorch autodiff"
-
-  contacts:
-    - name: "Project Lead"
-      role: "Domain expert, final decisions"
-
-# ----------------------------------------------------------------------------
-# Project Metadata
-# ----------------------------------------------------------------------------
-meta:
-  created: 2024-01-15
-  orchestra_version: "1.0"
-
-  # Where to find orchestra rules (if not local)
-  orchestra_source: "~/.orchestra"  # or "https://github.com/user/orchestra"
+  Watch out for:
+  - Phase ambiguity in eigenvectors
+  - Sign convention in QR decomposition
+  - Memory layout (column-major vs row-major)
