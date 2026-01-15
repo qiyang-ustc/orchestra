@@ -18,8 +18,9 @@ Orchestra solves this through:
 
 ## Quick Start
 
-1. Create `orchestra.yaml` in your project:
+1. In your project, create two files:
 
+**`orchestra.yaml`** — Your declaration:
 ```yaml
 src: ../TeneT.jl            # Source (read-only)
 dst: ./tenet_py             # Target (local, read-write)
@@ -32,15 +33,24 @@ notes: |
   - Julia 1-indexed → Python 0-indexed
   - Ground state energy should be negative
   - Start with core linalg, then MPS, then VUMPS
-
-  Watch out for:
-  - Phase ambiguity in eigenvectors
-  - Sign convention in QR
 ```
 
-2. Say: `/orchestra` or "start orchestra"
+**`CLAUDE.md`** — Copy from [`templates/CLAUDE.md`](templates/CLAUDE.md) or just:
+```markdown
+# Orchestra Translation Project
+Read `orchestra.yaml` for project declaration.
+Follow orchestra framework rules.
+```
 
-That's it. Put your domain knowledge in `notes`, LLM handles the rest.
+2. Start Claude Code:
+```bash
+cd your-project
+claude
+```
+
+3. Say: "Start translation" or "Read orchestra.yaml and begin"
+
+That's it. Your domain knowledge goes in `notes`, Claude follows the framework.
 
 ## Directory Structure
 
