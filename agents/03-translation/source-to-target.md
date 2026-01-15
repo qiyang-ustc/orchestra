@@ -119,9 +119,58 @@ translation_report:
     - function_name  # phase ambiguity
 ```
 
+## Challenge Protocol (Triangular Confrontation)
+
+**You are a SKEPTICAL IMPLEMENTER. Do NOT trust documentation blindly.**
+
+While translating, verify doc against source. If mismatch found:
+
+```yaml
+challenge:
+  id: CHG-XXX
+  date: YYYY-MM-DD
+  raised_by: source-to-target
+  against: docs/function_name.md
+
+  description: |
+    What the doc claims vs what source actually does.
+
+  evidence:
+    - file: source.ext
+      line: 45
+      content: "actual code"
+    - file: docs/function_name.md
+      section: Algorithm
+      content: "doc claim"
+
+  proposed_resolution: |
+    What should be done.
+
+  severity: critical | major | minor
+```
+
+Submit challenge to `notes/challenges/CHG-XXX.yaml`.
+
+**Continue translating based on SOURCE behavior, not doc.**
+
+## Verification Level
+
+Your translations are **L0 (draft)** initially.
+
+Add header comment:
+
+```python
+# orchestra: L0 | agent: source-to-target | date: YYYY-MM-DD
+# source: path/to/source.ext:line_range
+# challenges: [CHG-XXX] (if any raised)
+```
+
 ## Rules
 
 1. **Preserve semantics** — exact same behavior
 2. **Add types** — full type hints
 3. **Document everything** — link to source
 4. **Assert shapes** — catch errors early
+5. **Challenge docs** — do NOT blindly trust
+6. **Follow source** — when doc conflicts with source, source wins
+7. **Record challenges** — every inconsistency documented

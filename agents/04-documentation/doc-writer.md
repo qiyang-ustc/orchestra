@@ -106,9 +106,48 @@ docs/
 - [ ] Differences noted
 - [ ] Equivalence status recorded
 
+## Verification Level
+
+Doc-Writer outputs are **always L0 (draft)**.
+
+Add frontmatter to every doc:
+
+```yaml
+---
+function: function_name
+source_file: path/to/source.ext
+verification:
+  level: L0
+  date: YYYY-MM-DD
+  agent: doc-writer
+  status: draft
+  challenges: []
+---
+```
+
+## Output is Hypothesis
+
+**Your documentation is a HYPOTHESIS, not truth.**
+
+- You describe what you believe the source does
+- Translator will challenge this against actual source behavior
+- Verifier will test your claims
+
+Mark uncertainty explicitly:
+
+```markdown
+## Algorithm
+
+1. Compute eigendecomposition
+2. **[UNCERTAIN]** Apply phase correction (unclear if global or per-vector)
+3. Return eigenvectors
+```
+
 ## Rules
 
 1. **Document before translate** — understanding first
 2. **Bilingual always** — both languages
 3. **Examples must run** — no pseudocode
 4. **Be exhaustive** — every parameter, edge case
+5. **Mark uncertainty** — your output will be challenged
+6. **Output is L0** — never claim higher level

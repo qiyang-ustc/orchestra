@@ -9,10 +9,12 @@ Orchestra is a methodology and template library for translating large codebases 
 The key insight: **The bottleneck of LLM code translation is not "can it write code" but "how do we verify it's correct".**
 
 Orchestra solves this through:
-1. **Oracle-based verification**: Source implementation serves as ground truth
-2. **N-way equivalence proofs**: Code, tests, and docs must all match
-3. **Async human-in-the-loop**: Non-blocking human decisions via queue pattern
-4. **Multi-agent decomposition**: Specialized agents for analysis, translation, verification
+
+1. **Triangular Confrontation**: Agents don't trust each other — they challenge
+2. **Verification Levels (L0-L4)**: Every artifact carries trust status
+3. **Equivalence Types (E0-E5)**: Clear definition of what "equal" means
+4. **Atomic Commits**: One function = one complete, traceable commit
+5. **Async Human Review**: Non-blocking decisions via queue pattern
 
 ## Quick Start
 
@@ -30,76 +32,140 @@ cp -r orchestra/agents/* /path/to/your/project/.claude/agents/
 3. Start Claude Code:
 ```bash
 cd /path/to/your/project
-claude --dangerously-skip-permissions
+claude
 ```
 
-4. Say: "Start session, follow CLAUDE.md protocol"
+4. Say: "Follow CLAUDE.md protocol"
 
 ## Directory Structure
 
 ```
 orchestra/
-├── README.md                 # This file
-├── PHILOSOPHY.md             # Core principles and theory
+├── README.md                    # This file
+├── PHILOSOPHY.md                # Core principles and theory
+├── VERIFICATION_LEVELS.md       # L0-L4 trust levels
+├── EQUIVALENCE_TYPES.md         # E0-E5 what "equal" means
+├── ATOMIC_COMMIT.md             # Commit conventions
 │
-├── templates/                # Base templates to customize
-│   ├── CLAUDE_BASE.md        # Main orchestration config
-│   ├── pyproject_base.toml   # Python project template
-│   └── conftest_base.py      # Pytest configuration
+├── templates/                   # Base templates to customize
+│   ├── CLAUDE_BASE.md           # Main orchestration config
+│   ├── pyproject_base.toml      # Python project template
+│   └── conftest_base.py         # Pytest + adversarial testing
 │
-├── agents/                   # Reusable agent definitions
-│   ├── 00-orchestration/     # Session management
-│   ├── 01-analysis/          # Code understanding
-│   ├── 02-preprocessing/     # Refactoring, splitting
-│   ├── 03-translation/       # Actual translation
-│   ├── 04-documentation/     # Doc generation
-│   ├── 05-verification/      # Equivalence proofs
-│   └── 06-debug/             # Troubleshooting
+├── agents/                      # Reusable agent definitions
+│   ├── 00-orchestration/        # Session management
+│   ├── 01-analysis/             # Code understanding
+│   ├── 02-preprocessing/        # Refactoring, splitting
+│   ├── 03-translation/          # Actual translation
+│   ├── 04-documentation/        # Doc generation
+│   ├── 05-verification/         # Equivalence proofs
+│   └── 06-debug/                # Troubleshooting
 │
-├── patterns/                 # Design patterns
-│   ├── oracle-verification.md
-│   ├── async-human-review.md
-│   ├── n-way-equivalence.md
-│   └── progressive-translation.md
-│
-└── examples/                 # Complete examples
-    ├── julia-to-pytorch/     # TeneT.jl translation
-    └── matlab-to-python/     # Corboz TN translation
+└── patterns/                    # Design patterns
+    ├── oracle-verification.md
+    ├── async-human-review.md
+    ├── n-way-equivalence.md
+    ├── progressive-translation.md
+    └── triangular-confrontation.md
 ```
 
 ## Core Concepts
 
-### The Orchestra Metaphor
+### The Onion Model (Inside-Out Translation)
 
-- **Conductor** (Orchestrator): Dispatches tasks, doesn't write code directly
-- **Musicians** (Sub-agents): Specialized performers (analyzer, translator, prover)
-- **Score** (CLAUDE.md): The master plan defining the performance
-- **Symphony** (Final output): Provably correct translated codebase
-
-### N-Way Equivalence
-
-For high-stakes translation, verify across multiple dimensions:
+Translation follows **human understanding order**, not dependency graph:
 
 ```
-     Code_Source ←——————→ Code_Target
-          ↑                    ↑
-          ↓                    ↓
-     Docs_Source ←——————→ Docs_Target
-          ↑                    ↑
-          ↓                    ↓
-     Test_Source ←——————→ Test_Target
+┌─────────────────────────────────────┐
+│  Edge: IO, CLI (L2 ok)              │
+├─────────────────────────────────────┤
+│  API: Public interfaces (L2 ok)     │
+├─────────────────────────────────────┤
+│  Algorithm: Domain logic (L2→L3)    │
+├─────────────────────────────────────┤
+│  Building Blocks: Structures (L3)   │
+├─────────────────────────────────────┤
+│  Core Math: SVD, contract (L3+)     │  ← Start here
+└─────────────────────────────────────┘
 ```
 
-All arrows must hold. If any breaks, something is wrong.
+**Core math must be L3+ before anything else.** One bug there corrupts everything.
 
-### Async Human Review
+### Triangular Confrontation
 
-When agents encounter uncertainty:
-1. Submit to queue (don't block)
-2. Skip the uncertain module
-3. Continue with other work
-4. Human reviews asynchronously
-5. Next session picks up resolved items
+No agent trusts another. Every output is a hypothesis to be challenged.
+
+```
+        Doc (hypothesis)
+         ↗️      ↖️
+    challenge  challenge
+       ↙️          ↘️
+Source ←───oracle───→ Target
+```
+
+- **Doc-Writer**: Generates hypothesis from source
+- **Translator**: Challenges doc while implementing (follows source when conflict)
+- **Verifier**: Attacks all three edges, tries to break the translation
+
+### Translation Planner
+
+The **strategic brain** that maintains:
+- **Conceptual map**: Which layer is each module?
+- **Verification state**: What level is each module at?
+- **Failure propagation**: When high-level fails, upgrade core requirements
+
+### Knowledge Oracle
+
+The **permanent memory** that manages:
+- **Knowledge Base**: All human decisions and domain expertise
+- **Domain Constraints**: Physical sanity checks (energy bounds, normalization)
+- **Consultation**: Other agents query before asking humans again
+
+Human expertise is captured once, reused forever.
+
+### Verification Levels
+
+Every code/test/doc fragment carries a trust level:
+
+| Level | Name | Meaning |
+|-------|------|---------|
+| **L0** | draft | Just written, unverified |
+| **L1** | cross-checked | Another agent confirmed |
+| **L2** | tested | Oracle tests pass |
+| **L3** | adversarial | Survived attacks |
+| **L4** | proven | Full verification + human review |
+
+**Any challenge immediately downgrades to L0.**
+
+### Equivalence Types
+
+Not all code can achieve the same level of "equal":
+
+| Type | Meaning | Example |
+|------|---------|---------|
+| **E5** | bit-identical | Integer arithmetic |
+| **E4** | within ε | Floating-point math |
+| **E3** | semantically same | Eigenvectors (up to phase) |
+| **E2** | same behavior | Convergence (different paths) |
+| **E1** | same distribution | Random functions |
+| **E0** | bounded difference | Intentional approximations |
+
+**Attacker agent uses equivalence type to calibrate attacks.**
+
+### Atomic Commits
+
+Every translation unit produces one commit with:
+
+```
+commit: "feat(tensor): translate contract [L3]"
+
+├── tenet_py/contract.py           # Code
+├── tests/test_contract.py         # Tests
+├── docs/contract.md               # Documentation
+└── reports/contract.yaml          # Verification report
+```
+
+Full traceability. `git bisect` works at function level.
 
 ## When to Use Orchestra
 
@@ -114,23 +180,24 @@ When agents encounter uncertainty:
 - Prototypes where correctness isn't critical
 - Languages with existing automated transpilers
 
-## Examples
+## Key Documents
 
-### Julia → PyTorch (TeneT.jl)
-Tensor network library translation with gradient correctness verification.
-
-### MATLAB → Python (Corboz TN)
-15-year-old physics codebase with 6-way equivalence proofs and legacy code archaeology.
-
-See `examples/` for complete configurations.
+| Document | Purpose |
+|----------|---------|
+| [PHILOSOPHY.md](PHILOSOPHY.md) | Theory and principles |
+| [VERIFICATION_LEVELS.md](VERIFICATION_LEVELS.md) | L0-L4 detailed spec |
+| [EQUIVALENCE_TYPES.md](EQUIVALENCE_TYPES.md) | E0-E5 detailed spec |
+| [TRANSLATION_ORDER.md](TRANSLATION_ORDER.md) | Which function to translate when |
+| [ATOMIC_COMMIT.md](ATOMIC_COMMIT.md) | Commit conventions |
+| [patterns/triangular-confrontation.md](patterns/triangular-confrontation.md) | The core verification pattern |
 
 ## Contributing
 
 This is an evolving methodology. Contributions welcome:
 - New agent templates for different scenarios
 - Additional design patterns
-- Examples from other language pairs
 - Improvements to verification strategies
+- Better adversarial attack strategies
 
 ## License
 

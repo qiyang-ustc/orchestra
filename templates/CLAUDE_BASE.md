@@ -30,7 +30,33 @@ For each module, prove equivalence across {{N}} dimensions:
 | `C ↔ D` | Code-doc consistency | Doc describes code |
 | `T ↔ D` | Test-doc consistency | Tests verify claims |
 
-**A module is PROVEN only when all checks pass.**
+### Verification Levels
+
+| Level | Name | Requirements |
+|-------|------|--------------|
+| **L0** | draft | Initial output, unverified |
+| **L1** | cross-checked | Another agent confirmed, no challenges |
+| **L2** | tested | Basic oracle tests pass |
+| **L3** | adversarial | Survived adversarial attacks |
+| **L4** | proven | Full triangle + adversarial + human review |
+
+### Triangular Confrontation
+
+```
+        Doc (hypothesis)
+         ↗️      ↖️
+    challenge  challenge
+       ↙️          ↘️
+Source ←───oracle───→ Target
+```
+
+**Core rule: Later agents do NOT trust earlier outputs. Every claim must be independently verified.**
+
+- Doc-Writer: generates hypothesis from source
+- Translator: challenges doc against source while implementing
+- Verifier: challenges all three edges
+
+**A module is PROVEN only when all checks pass AND no unresolved challenges exist.**
 
 ---
 
@@ -41,18 +67,19 @@ For each module, prove equivalence across {{N}} dimensions:
 ### Session Start
 
 ```
-1. @session-init          → Verify environment
-2. @progress-tracker      → Report current state
-3. @human-review-gate     → Check resolved items
-4. @dependency-mapper     → Plan parallel work
+@translation-planner status   → What's the current state? What should we do?
+@human-review-gate            → Check resolved items (if any pending)
 ```
+
+> **Note**: Use `/orchestra-init` skill for full environment verification (optional).
 
 ### Dispatch Rules
 
 1. **Never block on human review** — skip and continue
 2. **Parallelize aggressively** — same-level modules concurrent
-3. **Document first** — understand before translate
-4. **Test immediately** — verify before moving on
+3. **Document first, translate second** — understand before implement
+4. **Triangular confrontation** — later agents challenge earlier outputs
+5. **Atomic commits** — one function = one complete commit
 
 ### Human Review Protocol
 
@@ -70,17 +97,18 @@ When any agent encounters uncertainty:
 
 | Category | Agent | Purpose |
 |----------|-------|---------|
+| orchestration | `translation-planner` | **Strategic brain**: conceptual map, verification state, failure propagation |
 | orchestration | `session-init` | Environment check |
 | orchestration | `progress-tracker` | Status tracking |
 | orchestration | `human-review-gate` | Async human decisions |
 | analysis | `codebase-scanner` | Build file index |
-| analysis | `dependency-mapper` | Call graph analysis |
+| analysis | `dependency-mapper` | Call graph + concept analysis |
 | analysis | `legacy-archaeologist` | Analyze old code |
 | preprocessing | `file-splitter` | Break large files |
 | preprocessing | `refactor-advisor` | Identify cleanups |
-| translation | `source-to-target` | Main translation |
-| documentation | `doc-writer` | Generate docs |
-| verification | `equivalence-prover` | Prove correctness |
+| translation | `source-to-target` | Main translation (skeptical, challenges doc) |
+| documentation | `doc-writer` | Generate hypothesis docs |
+| verification | `equivalence-prover` | Adversarial attacker, prove correctness |
 | debug | `code-verifier` | File state checks |
 
 ---

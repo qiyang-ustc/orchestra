@@ -98,3 +98,9 @@ If any check fails:
 - Code ≢ Docs → Doc is wrong OR code is wrong
 
 Each failure type has different debugging approach.
+
+## Related Concepts
+
+- **Equivalence Types (E0-E5)**: What does "≡" mean? See [EQUIVALENCE_TYPES.md](../EQUIVALENCE_TYPES.md)
+- **Verification Levels (L0-L4)**: How verified is each check? See [VERIFICATION_LEVELS.md](../VERIFICATION_LEVELS.md)
+- **Triangular Confrontation**: How agents challenge each other. See [triangular-confrontation.md](./triangular-confrontation.md)

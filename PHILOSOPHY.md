@@ -29,6 +29,28 @@ This transforms translation from "write and pray" to "prove equivalence".
 ∀ valid input x:  |f_target(x) - f_source(x)| < ε
 ```
 
+## Trust Nothing: Triangular Confrontation
+
+Multi-agent systems have a hidden failure mode: **agents trusting each other**.
+
+If Doc-Writer makes a mistake, Translator copies it, Verifier validates against the wrong spec. The error propagates silently.
+
+**Solution: No agent trusts another.**
+
+```
+        Doc (hypothesis)
+         ↗️      ↖️
+    challenge  challenge
+       ↙️          ↘️
+Source ←───oracle───→ Target
+```
+
+- Doc-Writer outputs a **hypothesis**, not truth
+- Translator **challenges** doc against source while implementing
+- Verifier **attacks** all three edges trying to break them
+
+**Truth emerges from surviving disagreement, not from assumed agreement.**
+
 ## N-Way Equivalence
 
 Single-dimension verification is fragile. Multi-dimension is robust.
@@ -221,9 +243,46 @@ Properties:
 - **Asynchronous**: No real-time requirement
 - **Transparent**: Both sides see same state
 
-## Verification Hierarchy
+## Verification Levels (L0-L4)
 
-Not all verification is equal:
+Every artifact carries a trust level:
+
+| Level | Name | What it means |
+|-------|------|---------------|
+| L0 | draft | Just written, no verification |
+| L1 | cross-checked | Another agent confirmed, no contradictions |
+| L2 | tested | Oracle tests pass |
+| L3 | adversarial | Attacker agent failed to break it |
+| L4 | proven | Full verification + human review |
+
+**Key rule: Any challenge immediately downgrades to L0.**
+
+This creates pressure for quality — a single inconsistency resets progress.
+
+## Equivalence Types (E0-E5)
+
+Not all code can achieve the same level of "equal":
+
+| Type | Definition | When achievable |
+|------|------------|-----------------|
+| E5 | bit-identical | Integer/boolean operations |
+| E4 | within tolerance ε | Floating-point math |
+| E3 | semantically same | Eigenvectors (up to phase) |
+| E2 | same observable behavior | Convergence algorithms |
+| E1 | same distribution | Random/stochastic functions |
+| E0 | bounded difference | Intentional approximations |
+
+**Why this matters for adversarial testing:**
+
+The attacker agent must know what "failure" means:
+- For E5: any bit difference = failure
+- For E4: difference > ε = failure
+- For E3: semantic invariant violated = failure
+- For E1: distribution test failed = failure
+
+Without this classification, attackers either miss real bugs (too lenient) or raise false alarms (too strict).
+
+## Verification Testing Hierarchy
 
 ### Level 1: Output Equivalence
 ```
@@ -252,12 +311,12 @@ f_source and f_target behave identically on:
 - Boundary conditions
 ```
 
-### Level 5: Stress Testing
+### Level 5: Adversarial Stress Testing
 ```
-Both handle:
-- Maximum size inputs
-- Numerical instability
-- Memory pressure
+Attacker actively tries to find:
+- Inputs where target ≠ source
+- Properties doc claims but code violates
+- Edge cases not covered by tests
 ```
 
 Climb levels as confidence requirements increase.
@@ -278,6 +337,70 @@ Mitigations:
 - Focus on deterministic core first
 - Build domain expertise incrementally
 
+## Atomic Commits
+
+Every translation unit produces exactly one commit containing:
+- Target code
+- Tests
+- Documentation
+- Verification report
+
+```
+commit: "feat(tensor): translate contract [L3]"
+```
+
+**Why atomic?**
+1. **Traceability**: `git blame` shows who translated what
+2. **Bisectability**: `git bisect` works at function level
+3. **Reviewability**: Each commit is a complete, reviewable unit
+4. **Rollbackability**: Revert one function without affecting others
+
+## Knowledge Oracle
+
+Human expertise is the most valuable and scarcest resource. Don't waste it.
+
+### The Problem
+
+Traditional approach:
+```
+Agent asks human → Human answers → Answer used once → Forgotten
+Next session: Same question asked again
+```
+
+### The Solution
+
+**Knowledge Oracle** — permanent memory for human expertise:
+
+```
+Agent asks → Oracle checks knowledge base
+  → Found? Return answer
+  → Not found? Ask human → Store permanently → Return answer
+```
+
+### What Gets Stored
+
+| Category | Examples |
+|----------|----------|
+| **Conventions** | Index convention, sign convention, naming |
+| **Domain Constraints** | Energy bounds, normalization, entropy limits |
+| **Translation Decisions** | Why we chose A over B |
+| **Gotchas** | Julia broadcast pitfalls, memory layout |
+
+### Domain Constraints as Verification
+
+Physical sanity checks become automated tests:
+
+```python
+# From knowledge_base.md:
+# "Heisenberg ground state energy must be negative"
+
+def test_vumps_heisenberg():
+    result = vumps(heisenberg_hamiltonian())
+    assert result.energy < 0  # Physical constraint
+```
+
+This captures **physics knowledge**, not just code correctness.
+
 ## Summary
 
 Orchestra transforms code translation from art to engineering:
@@ -285,10 +408,13 @@ Orchestra transforms code translation from art to engineering:
 | Traditional | Orchestra |
 |-------------|-----------|
 | Translate and hope | Prove equivalence |
+| Trust agent outputs | Triangular confrontation |
 | Single LLM session | Multi-agent orchestration |
 | Block on uncertainty | Async human review |
 | All-at-once | Progressive by dependency |
 | Tests as afterthought | Tests as verification |
-| Docs optional | Docs as cross-check |
+| Docs optional | Docs as hypothesis to verify |
+| Bulk commits | Atomic commits per function |
+| Human answers once, forgotten | Knowledge Oracle, permanent memory |
 
-The result: Translations you can trust.
+The result: Translations you can trust, with full audit trail and preserved expertise.

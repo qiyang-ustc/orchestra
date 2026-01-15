@@ -56,37 +56,63 @@ Level 3:             [main, optimizer]
 
 Modules at same level can be translated in parallel.
 
+### Step 5: Calculate Priority Scores
+
+Within each level, rank functions by translation priority:
+
+```
+priority = dependency_weight × 0.4
+         + equivalence_ease × 0.3
+         + risk_factor × 0.2
+         + size_factor × 0.1
+```
+
+See [TRANSLATION_ORDER.md](../../TRANSLATION_ORDER.md) for full algorithm.
+
 ## Output Format
 
 ```yaml
 dependency_analysis:
   total_modules: N
-  
+
   levels:
     0:
-      modules: [utils.ext, constants.ext]
+      modules:
+        - name: utils.ext
+          dependents: 12
+          equivalence_type: E4
+          risk: 0.2
+          lines: 150
+          priority: 0.85
+        - name: constants.ext
+          dependents: 8
+          equivalence_type: E5
+          risk: 0.0
+          lines: 30
+          priority: 0.72
       parallel: true
       description: "Leaf nodes, no internal dependencies"
     1:
-      modules: [types.ext, helpers.ext]
+      modules:
+        - name: types.ext
+          priority: 0.68
+        - name: helpers.ext
+          priority: 0.55
       parallel: true
       depends_on: [level_0]
-    2:
-      modules: [algorithm.ext]
-      parallel: false
-      depends_on: [level_0, level_1]
-      
+
   circular_dependencies: []  # or list of cycles
-  
+
   critical_path:
     - utils.ext
     - types.ext
     - algorithm.ext
     - optimizer.ext
   critical_path_length: 4
-  
+
+  # Ordered by priority within each batch
   recommended_order:
-    batch_1: [utils.ext, constants.ext]  # parallel
+    batch_1: [utils.ext, constants.ext]  # parallel, sorted by priority
     batch_2: [types.ext, helpers.ext]    # parallel
     batch_3: [algorithm.ext]
     batch_4: [optimizer.ext]

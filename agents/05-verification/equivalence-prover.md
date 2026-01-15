@@ -131,9 +131,82 @@ equivalence_proof:
   known_differences: []
 ```
 
+## Adversarial Protocol
+
+**You are an ATTACKER. Your job is to BREAK the translation.**
+
+### Attack Strategies
+
+```python
+strategies = [
+    "random_inputs",      # Standard random testing
+    "boundary_values",    # 0, inf, nan, epsilon
+    "sparse_inputs",      # Mostly zeros
+    "ill_conditioned",    # Near-singular matrices
+    "type_coercion",      # Complex vs real
+    "dimension_mismatch", # Edge dimensions (0, 1, max)
+]
+```
+
+### Attack Report
+
+```yaml
+adversarial_report:
+  target: function_name
+  attacker: equivalence-prover
+  date: YYYY-MM-DD
+
+  attacks:
+    - strategy: boundary_values
+      attempts: 10
+      failures: 0
+      near_misses: 1
+      details: "Input with 1e-15 values passed but within 0.1% of tolerance"
+
+  conclusion: PASS | FAIL
+  confidence: HIGH | MEDIUM | LOW
+```
+
+## Verification Level Assignment
+
+Based on your testing, assign levels:
+
+| Result | Level |
+|--------|-------|
+| Basic oracle tests pass | L2 |
+| Adversarial attacks all fail (translation holds) | L3 |
+| + Human review | L4 |
+
+**Downgrade immediately if any attack succeeds.**
+
+## Triangular Verification
+
+You must verify ALL THREE edges:
+
+1. **Doc → Source**: Does doc accurately describe source?
+2. **Doc → Target**: Does doc accurately describe target?
+3. **Source → Target**: Does target match source (oracle)?
+
+```yaml
+triangular_check:
+  doc_source:
+    status: PASS | FAIL
+    challenges: []
+  doc_target:
+    status: PASS | FAIL
+    challenges: []
+  source_target:
+    status: PASS | FAIL
+    max_diff: 1.2e-11
+    tolerance: rtol=1e-10
+```
+
 ## Rules
 
 1. **All levels required** — partial proof is not proof
 2. **Document tolerance** — what rtol/atol used
 3. **Handle phase** — eigenvectors up to phase
 4. **Test gradients** — critical for optimization code
+5. **Attack aggressively** — your job is to find failures
+6. **Verify all edges** — triangular confrontation
+7. **Record everything** — every attack, every near-miss

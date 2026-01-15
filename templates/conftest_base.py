@@ -185,13 +185,161 @@ def random_unitary(device, dtype):
 
 
 # =============================================================================
+# Verification Level Tracking
+# =============================================================================
+
+VERIFICATION_LEVELS = {
+    "L0": "draft",
+    "L1": "cross-checked",
+    "L2": "tested",
+    "L3": "adversarial",
+    "L4": "proven",
+}
+
+
+class VerificationTracker:
+    """Track verification levels across test runs."""
+
+    def __init__(self):
+        self.results: Dict[str, Dict[str, Any]] = {}
+
+    def record(
+        self,
+        target: str,
+        level: str,
+        challenger: str,
+        passed: bool,
+        details: Optional[Dict] = None,
+    ) -> None:
+        """Record a verification result."""
+        if target not in self.results:
+            self.results[target] = {"history": []}
+
+        self.results[target]["history"].append({
+            "level": level,
+            "challenger": challenger,
+            "passed": passed,
+            "details": details or {},
+            "timestamp": __import__("datetime").datetime.now().isoformat(),
+        })
+
+        if passed:
+            self.results[target]["current_level"] = level
+
+    def get_level(self, target: str) -> str:
+        """Get current verification level for a target."""
+        return self.results.get(target, {}).get("current_level", "L0")
+
+    def export(self, path: Path) -> None:
+        """Export results to YAML."""
+        import yaml
+        with open(path, "w") as f:
+            yaml.dump(self.results, f, default_flow_style=False)
+
+
+@pytest.fixture(scope="session")
+def verification_tracker() -> VerificationTracker:
+    """Session-wide verification tracker."""
+    return VerificationTracker()
+
+
+# =============================================================================
+# Adversarial Testing Support
+# =============================================================================
+
+class AdversarialAttacker:
+    """Generate adversarial inputs to break equivalence."""
+
+    def __init__(self, seed: int = 42):
+        self.rng = np.random.default_rng(seed)
+        self.attempts = 0
+        self.failures = 0
+        self.near_misses = 0
+
+    def random_tensor(
+        self,
+        shape: tuple,
+        dtype: torch.dtype = torch.complex128,
+        strategy: str = "normal",
+    ) -> torch.Tensor:
+        """Generate adversarial tensor input."""
+        self.attempts += 1
+
+        if strategy == "normal":
+            data = self.rng.standard_normal(shape) + 1j * self.rng.standard_normal(shape)
+        elif strategy == "boundary":
+            # Values near machine epsilon, large values, zeros
+            choices = [1e-15, 1e15, 0.0, 1.0, -1.0]
+            data = self.rng.choice(choices, size=shape)
+            data = data + 1j * self.rng.choice(choices, size=shape)
+        elif strategy == "sparse":
+            data = np.zeros(shape, dtype=np.complex128)
+            nnz = max(1, int(np.prod(shape) * 0.1))
+            indices = self.rng.choice(np.prod(shape), size=nnz, replace=False)
+            np.put(data, indices, self.rng.standard_normal(nnz))
+        elif strategy == "ill_conditioned":
+            # For matrices: create nearly singular
+            if len(shape) == 2 and shape[0] == shape[1]:
+                n = shape[0]
+                u = self.rng.standard_normal((n, n))
+                s = np.logspace(-15, 0, n)  # condition number ~ 1e15
+                data = u @ np.diag(s) @ u.T
+            else:
+                data = self.rng.standard_normal(shape)
+        else:
+            data = self.rng.standard_normal(shape)
+
+        return torch.from_numpy(np.asarray(data, dtype=np.complex128))
+
+    def record_failure(self, details: str) -> None:
+        """Record a failed attack (equivalence broken)."""
+        self.failures += 1
+
+    def record_near_miss(self, details: str) -> None:
+        """Record near-miss (passed but close to tolerance)."""
+        self.near_misses += 1
+
+    def report(self) -> Dict[str, Any]:
+        """Generate adversarial testing report."""
+        return {
+            "total_attempts": self.attempts,
+            "failures": self.failures,
+            "near_misses": self.near_misses,
+            "success_rate": (self.attempts - self.failures) / max(1, self.attempts),
+            "conclusion": "PASS" if self.failures == 0 else "FAIL",
+        }
+
+
+@pytest.fixture
+def adversarial_attacker() -> AdversarialAttacker:
+    """Adversarial input generator."""
+    return AdversarialAttacker()
+
+
+# =============================================================================
 # Pytest Configuration
 # =============================================================================
 
 def pytest_configure(config):
+    # Basic markers
     config.addinivalue_line("markers", "slow: marks tests as slow")
     config.addinivalue_line("markers", "equivalence: marks equivalence tests")
     config.addinivalue_line("markers", "source_required: requires source runtime")
+
+    # Verification level markers
+    config.addinivalue_line(
+        "markers",
+        "orchestra(level, source, challenger=None): verification level metadata"
+    )
+    config.addinivalue_line(
+        "markers",
+        "adversarial(attacker, attempts, failures): adversarial test metadata"
+    )
+
+    # Triangular confrontation markers
+    config.addinivalue_line("markers", "doc_source: tests doc-source consistency")
+    config.addinivalue_line("markers", "doc_target: tests doc-target consistency")
+    config.addinivalue_line("markers", "source_target: tests source-target equivalence (oracle)")
 
 
 def pytest_collection_modifyitems(config, items):
