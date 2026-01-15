@@ -108,29 +108,19 @@ challenges:
       date: null
 ```
 
-## Two Test Types Required
+## The Only Truth: Oracle
 
-L2+ requires BOTH test types to pass:
+**Source implementation behavior is the ONLY golden standard.**
 
-### Doc-Based Tests
-
-Tests that verify **documentation claims**:
-
-```python
-# From doc: "Returns orthonormal Q"
-def test_orthonormality():
-    Q, R = qrpos(A)
-    assert torch.allclose(Q.T @ Q, torch.eye(n))
-
-# From doc: "R has positive diagonal"
-def test_positive_diagonal():
-    Q, R = qrpos(A)
-    assert (torch.diag(R) > 0).all()
+```
+∀x: target(x) ≈ source(x)
 ```
 
-### Oracle Tests
+- If source has a "bug", we reproduce it
+- If source has a trick we don't understand, we match it
+- Doc helps understand, but doesn't define truth
 
-Tests that compare **target vs source**:
+### Oracle Tests (Required for L2+)
 
 ```python
 def test_oracle():
@@ -139,12 +129,21 @@ def test_oracle():
     assert torch.allclose(actual, expected, rtol=1e-10)
 ```
 
+### Doc-Based Tests (Secondary, for understanding)
+
+```python
+# Tests OUR UNDERSTANDING, not ground truth
+# If fails but oracle passes → update doc
+def test_our_understanding_orthonormal():
+    Q, R = qrpos(A)
+    assert torch.allclose(Q.T @ Q, torch.eye(n))
+```
+
 ### Test File Convention
 
 ```
 tests/
-├── test_{function}_doc.py      # Doc-based tests
-├── test_{function}_oracle.py   # Oracle tests
+├── test_{function}.py          # Oracle tests (required)
 └── ground_truth/
     └── {function}.npz          # Oracle data from source
 ```
@@ -153,18 +152,12 @@ tests/
 
 ## Adversarial Testing Protocol
 
-For L3, attacker tries to break BOTH test types:
+For L3, try to find inputs where `target(x) ≠ source(x)`:
 
-### Attack Doc Claims
-Find inputs where doc claims might fail:
-- "positive diagonal" → try ill-conditioned matrix
-- "orthonormal" → try near-singular input
-
-### Attack Oracle
-Find inputs where target ≠ source:
 - Boundary values (0, inf, nan, epsilon)
 - Ill-conditioned cases
 - Type edge cases (complex, small dims)
+- Random stress testing (many seeds)
 
 ### Adversarial Report Format
 
