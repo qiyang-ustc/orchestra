@@ -26,14 +26,14 @@ cd ~/works
 # 1. Clone source
 git clone git@github.com:someone/TeneT.jl.git
 
-# 2. Clone orchestra
-git clone git@github.com:qiyang-ustc/orchestra.git
+# 2. Clone orchestra as your project
+git clone git@github.com:qiyang-ustc/orchestra.git pytenet
+cd pytenet
 
 # 3. Run example init script
-./orchestra/scripts/example-init.sh git@github.com:you/pytenet.git
+./scripts/example-init.sh git@github.com:you/pytenet.git
 
 # 4. Start
-cd pytenet
 git push -u origin main
 claude
 ```
@@ -42,18 +42,18 @@ This creates:
 ```
 ~/works/
 ├── TeneT.jl/        # src (read-only)
-├── orchestra/       # framework
-└── pytenet/         # your project
+└── pytenet/         # your project (cloned from orchestra)
     ├── orchestra.yaml   # src: ../TeneT.jl
     ├── CLAUDE.md
-    └── pytenet/         # dst package
+    └── pytenet/         # dst package (inside project)
 ```
 
 ### Option B: Manual setup
 
 ```bash
-# 1. Pull source
 cd ~/works
+
+# 1. Clone source
 git clone git@github.com:someone/TeneT.jl.git
 
 # 2. Clone orchestra as your project
