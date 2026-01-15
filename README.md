@@ -18,25 +18,52 @@ Orchestra solves this through:
 
 ## Quick Start
 
-### 1. Pull source code (somewhere)
+### Option A: One-liner with script
 
 ```bash
+# 1. Have src somewhere
+git clone git@github.com:someone/TeneT.jl.git
+
+# 2. Clone orchestra
+git clone git@github.com:qiyang-ustc/orchestra.git
+
+# 3. Run init script
+./orchestra/scripts/init-project.sh pytenet ./TeneT.jl git@github.com:you/pytenet.git
+
+# 4. Start
+cd pytenet
+git push -u origin main
+claude
+```
+
+### Option B: Manual setup
+
+```bash
+# 1. Pull source
 cd ~/works
 git clone git@github.com:someone/TeneT.jl.git
+
+# 2. Clone orchestra as your project
+git clone git@github.com:qiyang-ustc/orchestra.git pytenet
+cd pytenet
+
+# 3. Edit orchestra.yaml
+vim orchestra.yaml
+
+# 4. Set remote and push
+git remote set-url origin git@github.com:you/pytenet.git
+git push
+
+# 5. Start
+claude
+> "Read orchestra.yaml and start translation"
 ```
 
-### 2. Pull Orchestra as your project base
-
-```bash
-git clone git@github.com:qiyang-ustc/orchestra.git tenet-py
-cd tenet-py
-```
-
-### 3. Edit orchestra.yaml
+### orchestra.yaml
 
 ```yaml
 src: ../TeneT.jl            # Path to source (read-only)
-dst: ./tenet_py             # Translation output (read-write)
+dst: ./pytenet              # Translation output (read-write)
 framework: julia -> pytorch
 
 notes: |
@@ -46,20 +73,6 @@ notes: |
   - Julia 1-indexed → Python 0-indexed
   - Ground state energy should be negative
   - Start with core linalg, then MPS, then VUMPS
-```
-
-### 4. Push to your dst repo
-
-```bash
-git remote set-url origin git@github.com:you/tenet-py.git
-git push
-```
-
-### 5. Start translation
-
-```bash
-claude
-> "Read orchestra.yaml and start translation"
 ```
 
 ### Directory structure
