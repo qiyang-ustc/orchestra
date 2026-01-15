@@ -104,6 +104,19 @@ notes: |
 
 Orchestra is the scaffolding. Clone it, edit yaml, push to your repo.
 
+### Reset & Update
+
+```bash
+# Reset to clean state (remove all translation progress)
+./scripts/reset.sh
+
+# Reset and pull latest orchestra updates
+./scripts/reset.sh --pull
+```
+
+What gets removed: translated code, tests, docs, reports.
+What stays: orchestra.yaml, knowledge_base.md, ground_truth data.
+
 ## Directory Structure
 
 ```
