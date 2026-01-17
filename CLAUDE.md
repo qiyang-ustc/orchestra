@@ -320,3 +320,4 @@ Task: "Read agents/00-orchestration/human-review-gate.md then:
 6. **Oracle tests** — compare against source, not just "runs"
 7. **Atomic commits** — code + test + doc per function
 8. **Knowledge oracle** — check before asking human again
+9. **Code Covergae** - Always use code-coverage tools to verify the execution of the process.
